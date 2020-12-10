@@ -1,0 +1,70 @@
+body{
+    margin: 0;
+}
+
+div.content{
+    border: 4px solid #000000;
+    border-radius: 10px;
+
+    background-color: rgba(255, 255, 255, 0.4);
+
+    /* width: 75%; */
+    padding: 20px 3em;
+
+    transform: translate(-50%, -50%);
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+
+
+}
+ div.background{
+    margin: 0;
+    background-image: url('./background.jpg');       /* renders image from given url */
+    background-repeat: no-repeat;                   /* if image size is less than window size it prevents repeating image in both (x,y) axis */
+    background-attachment: fixed;                    /* prevents image from scrolling */
+    /* background-size: cover; */
+    background-position: center;
+    height: 100vh;  
+    /* z-index: 1; */
+} 
+
+.inline-block{
+    display: inline-block;
+}
+
+.flex{
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+
+}
+
+
+
+
+/* pagination */
+.pagination{
+    /* display: inline-block; */
+    /* width: 50%; */
+
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%, 0);
+    
+    padding-bottom: 20px;
+}
+
+.pagination a{
+    color: rgba(39, 37, 37, 0.8);
+    padding: 5px;
+    font-size: 15px;
+}
+
+.pagination a.active{
+   
+    font-weight: bolder;
+}
