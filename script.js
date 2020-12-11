@@ -1,26 +1,58 @@
-// document.body.style.backgroundColor = "#FA0000";
 
-// fetch('http://www.example.com/movies.json').then(response => {
-//         if(!response.ok){
-//             console.log('Network response wasnt ok.');
-//         }
-//         else
-//             console.log('Was successful');
-//     });
 
-let results;
-fetch('https://swapi.dev/api/starships/')
-    .then(response => response.json())
-        .then(data => {
-            // console.log(data);
-            // console.log(typeof(data.results));   
-            results = data.results;
-            console.log('results', results);
-            showStarShips(data.results.slice(0, 11));
+var results;
+var starships = new Array();
 
-            // pagination();
-        });
+var flag = false;
+var nextPage;
+let errorDetected = false;
 
+/* This function fetches content of starships according to given page number.
+   Starship details then will be stored in starships array for further use. */
+function fetchStarships(pageNum){
+    
+        clearContent();
+
+        console.log(pageNum);
+        if(pageNum == 1)
+            reqUrl = 'https://swapi.dev/api/starships/';
+        else
+            reqUrl = 'https://swapi.dev/api/starships/?page=' + pageNum;
+
+        fetch(reqUrl)
+            .then(response => {
+                if(!response.ok){
+                    console.log(response);
+
+                    errorDetected = true;
+                    let elem = document.createElement('h4');
+                    elem.id = 'error';
+                    elem.innerHTML = 'Server returned 404 Error because no content is available!';
+                    document.getElementsByClassName('list')[0].appendChild(elem);
+                    
+                    throw new Error('Error Detected.');
+
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                results = data;
+                nextPage = data.next;
+                
+                starships = data.results;
+
+                showStarShips(starships.slice(0, 11));
+                    
+                });
+                
+       
+}
+
+
+
+
+/* this function renders items passed to it as input */
 function showStarShips(items){
     
     let parent = document.getElementsByClassName('starships')[0];
@@ -47,12 +79,13 @@ function handleOnClick(){
     }
 }
 
+/* This function retrieves a starship's details and creates DOM elements to render it on screen. */
 function showShipDetails(name){
-    // console.log(results);
+    
     let item_detail = document.getElementsByClassName('item-detail')[0];
     item_detail.innerHTML = '';
 
-    let starship = results.filter(i => i.name == name);
+    let starship = starships.filter(i => i.name == name);
     console.log('current starship: ', starship);
     
     let header_elem = document.createElement('h2');
@@ -80,18 +113,18 @@ function showShipDetails(name){
     passengers.innerHTML = starship[0].passengers;
     unorderedList.appendChild(passengers);
 
-    /* append <h2> and <ul> to root DOM */
+    /* append <h2> and <ul> to parent DOM */
     item_detail.appendChild(header_elem);
     item_detail.appendChild(unorderedList);
 
-    
+    /* if starship has `films` property retrieve them by calling followin function */
     if(starship[0].hasOwnProperty('films'))
         showFilmDetails(starship[0]);
 
     
 
 }
-
+/* this function creates `li` element and appends it to parent DOM foreach film inside starship.films array */
 function showFilmDetails(starship){
 
     
@@ -110,30 +143,64 @@ function showFilmDetails(starship){
 }
 
 
-/* Handle pagination */
-document.getElementsByClassName('pagination')[0].addEventListener('click', function(event){
-    
-    console.log(event.target);
-});
-
-
+/* This function has an important task. It selects and activates each page that user clicks on and more importantly it then fetches related data 
+   by calling fetchStarships(pageNumber) function */
+let pageNum;
 function pagination(){
+    /* at the first time page 1 is active. then contents of first ten starships should be fetched initially. */
+    fetchStarships(1);
+
     let pages = document.querySelectorAll('div.pagination a');
     console.log(pages);
+
     for (let page of pages) {
         // console.log(page);
-        page.addEventListener('click', function(event){
-            this.className += 'active';
-            console.log(page);
+        let isNextOrPrev = false;
+        page.addEventListener('click', function(e){
+            e.preventDefault();
+            
+            if(page.id === 'next'){
+                pageNum += 1;
+                isNextOrPrev = true;
+                fetchStarships(pageNum);
+            }
+            else if(page.id === 'prev' && pageNum > 1){
+                pageNum -= 1;
+                isNextOrPrev = true;
+                fetchStarships(pageNum);
+            }
+            else{
+                pageNum = Number(page.innerHTML);
+
+                if(pageNum >= 1 && pageNum <= 5)
+                    fetchStarships(pageNum);
+            }
+            
+            /* Highlight clicked page as  `active`, else remove previously actived pages. */
+            for (let p of pages) {
+                if(p.innerHTML == pageNum){
+                    p.className += 'active';
+                    // break
+                }
+                else
+                    p.classList.remove('active');
+            }
+
+            
         }.bind(this));
     }
 }
 
 pagination();
 
+/* this function clears list of starships and available details of clicked starship */
+function clearContent(){
+    document.querySelector('div ul.starships').innerHTML = '';
+    document.getElementsByClassName('item-detail')[0].innerHTML = '';
 
-
-
-
-// starships = results.slice(0, 11);
-// console.log(starships);
+    /* If we encounter error in fetch process, then it should be cleared out from DOM after fetching correct data */
+    if(errorDetected){
+        document.getElementById('error').remove();
+        errorDetected = false;
+    }
+}
